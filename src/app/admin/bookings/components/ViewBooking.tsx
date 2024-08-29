@@ -30,8 +30,8 @@ const ViewBooking = ({ booking, onClose }: ViewBookingProps) => {
                         <div className="font-bold text-xl w-fit rounded-lg ">Attendees</div>
                         <Button size={"sm"} className="font-black mb-1"><RiUserAddLine /> Add Attendee</Button>
                     </div>
-                    <div className="border-2 rounded-lg p-4">{booking.attendees.map((attendee) => (
-                        <div className="flex border-b-2 justify-between items-center p-2">
+                    <div className="border-2 rounded-lg p-4">{booking.attendees.map((attendee, index) => (
+                        <div key={index} className="flex border-b-2 justify-between items-center p-2">
                             <div className="font-bold">
                                 {attendee.name}
                             </div>
@@ -40,10 +40,6 @@ const ViewBooking = ({ booking, onClose }: ViewBookingProps) => {
                             </div>
                         </div>
                     ))}</div>
-                </div>
-
-                <div>
-                    
                 </div>
             </div>
         </div>

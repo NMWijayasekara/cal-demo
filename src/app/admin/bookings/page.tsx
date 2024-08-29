@@ -1,222 +1,399 @@
-"use client"
+"use client";
 import { acceptBooking, cancelBooking, getBookings } from "@/api/bookings";
+import AddBooking from "@/app/admin/bookings/components/AddBooking";
+import ViewBooking from "@/app/admin/bookings/components/ViewBooking";
+import BookingStatusBadge from "@/app/admin/bookings/components/BookingStatusBadge";
 import { Booking, BookingStatus } from "@/app/admin/bookings/types";
-import ViewBooking from "@/app/admin/bookings/ViewBooking";
 import { Button } from "@/components/ui/button";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { ColumnDef, ColumnFiltersState, flexRender, getCoreRowModel, getFilteredRowModel, useReactTable } from "@tanstack/react-table";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  RiAddLine,
+  RiLoader2Line,
+  RiRefreshLine,
+  RiCloseLine,
+} from "@remixicon/react";
+import {
+  ColumnDef,
+  ColumnFiltersState,
+  flexRender,
+  getCoreRowModel,
+  SelectColumnFilter,
+  getFilteredRowModel,
+  useReactTable,
+} from "@tanstack/react-table";
 import { MoreHorizontal } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
+import { Events, EventsStatus } from "@/app/admin/events/types";
+import { getEvents } from "@/api/events";
+import { format } from "date-fns";
 
-const Admin = () => {
-    const [bookings, setBookings] = useState<any[]>([]);
-    const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
+const Booking = () => {
+  const [bookings, setBookings] = useState<Booking[]>([]);
+  const [events, setEvents] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [updatedStatusLoading, setUpdatedStatusLoading] = useState(null);
+  const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
+  const [openAddBooking, setOpenAddBooking] = useState(false);
 
-    const fetchBookings = useCallback(async () => {
-        const fetchedBookings = await getBookings();
-        setBookings(fetchedBookings);
-    }, [])
+  const fetchBookings = useCallback(async () => {
+    setLoading(true);
+    const fetchedBookings = await getBookings();
+    setBookings(fetchedBookings);
+    setLoading(false);
+  }, []);
 
-    useEffect(() => {
-        fetchBookings();
-    }, [])
+  const fetchEvents = useCallback(async () => {
+    const fetchedEvents = await getEvents();
+    console.log(fetchedEvents);
+    setEvents(fetchedEvents);
+  }, []);
 
-    const cancelBookingFunc = async (bookingId: number) => {
-        try {
-            await cancelBooking(bookingId);
+  useEffect(() => {
+    fetchBookings();
+    fetchEvents();
+  }, []);
 
-            setBookings((prevBookings) =>
-                prevBookings.map((booking) =>
-                    booking.id === bookingId
-                        ? { ...booking, status: BookingStatus.CANCELLED }
-                        : booking
-                )
-            );
+  const cancelBookingFunc = async (bookingId: number) => {
+    try {
+      setUpdatedStatusLoading(bookingId);
+      await cancelBooking(bookingId);
 
-        } catch (error) {
-            console.error("Failed to cancel booking:", error);
-        }
-    };
+      setBookings((prevBookings) =>
+        prevBookings.map((booking) =>
+          booking.id === bookingId
+            ? { ...booking, status: BookingStatus.CANCELLED }
+            : booking
+        )
+      );
+      setUpdatedStatusLoading(null);
+    } catch (error) {
+      console.error("Failed to cancel booking:", error);
+    }
+  };
 
-    const acceptBookingFunc = async (bookingId: number) => {
-        try {
-            await acceptBooking(bookingId);
+  const acceptBookingFunc = async (bookingId: number) => {
+    try {
+      setUpdatedStatusLoading(bookingId);
+      await acceptBooking(bookingId);
 
-            setBookings((prevBookings) =>
-                prevBookings.map((booking) =>
-                    booking.id === bookingId
-                        ? { ...booking, status: BookingStatus.ACCEPTED }
-                        : booking
-                )
-            );
+      setBookings((prevBookings) =>
+        prevBookings.map((booking) =>
+          booking.id === bookingId
+            ? { ...booking, status: BookingStatus.ACCEPTED }
+            : booking
+        )
+      );
+      setUpdatedStatusLoading(null);
+    } catch (error) {
+      console.error("Failed to cancel booking:", error);
+    }
+  };
 
-        } catch (error) {
-            console.error("Failed to cancel booking:", error);
-        }
-    };
+  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
 
-    const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
+  const columns: ColumnDef<Booking>[] = [
+    {
+      accessorKey: "status",
+      header: "Status",
+      cell: ({ row }) => {
+        const bookingId = row.getValue("id");
+        const loadingStatus = bookingId == updatedStatusLoading ? true : false;
+        return (
+          <BookingStatusBadge
+            loading={loadingStatus}
+            status={row.getValue("status")}
+          />
+        );
+      },
+    },
+    {
+      accessorKey: "id",
+      header: "ID",
+    },
+    {
+      accessorKey: "eventTypeId",
+      header: "Event ID",
+    },
+    {
+      accessorKey: "title",
+      header: "Title",
+    },
+    {
+      accessorKey: "startTime",
+      header: "Date",
+      cell: ({ row }) => {
+        return <div>{format(new Date(row.getValue("startTime")), "PPP")}</div>;
+      },
+    },
+    {
+      accessorKey: "startTime",
+      header: "Start Time",
+      cell: ({ row }) => {
+        return (
+          <div>{format(new Date(row.getValue("startTime")), "h:mm aa")}</div>
+        );
+      },
+    },
+    {
+      accessorKey: "endTime",
+      header: "End Time",
+      cell: ({ row }) => {
+        return (
+          <div>{format(new Date(row.getValue("endTime")), "h:mm aa")}</div>
+        );
+      },
+    },
+    {
+      id: "actions",
+      cell: ({ row }) => {
+        const booking = row.original;
 
-    const columns: ColumnDef<Booking>[] = [
-        {
-            accessorKey: "status",
-            header: "Status",
-        },
-        {
-            accessorKey: "id",
-            header: "ID",
-        },
-        {
-            accessorKey: "title",
-            header: "Title",
-        },
-        {
-            accessorKey: "startTime",
-            header: "Date",
-            cell: ({ row }) => {
-                const formattedTime = new Date(row.getValue("startTime")).toLocaleDateString();
+        return (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" className="h-8 w-8 p-0">
+                <span className="sr-only">Open menu</span>
+                <MoreHorizontal className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuLabel
+                className="cursor-pointer"
+                onClick={() => setSelectedBooking(booking)}
+              >
+                View Booking{" "}
+              </DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              {booking.status !== BookingStatus.CANCELLED && (
+                <DropdownMenuItem onClick={() => cancelBookingFunc(booking.id)}>
+                  Cancel Booking
+                </DropdownMenuItem>
+              )}
+              {booking.status !== BookingStatus.ACCEPTED && (
+                <DropdownMenuItem onClick={() => acceptBookingFunc(booking.id)}>
+                  Accept Booking
+                </DropdownMenuItem>
+              )}
+              {booking.status === BookingStatus.CANCELLED && (
+                <DropdownMenuItem onClick={() => cancelBookingFunc(booking.id)}>
+                  Delete Booking
+                </DropdownMenuItem>
+              )}
+              <DropdownMenuItem
+                onClick={() =>
+                  navigator.clipboard.writeText(booking.id.toString())
+                }
+              >
+                Copy booking ID
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        );
+      },
+    },
+  ];
 
-                return <div>{formattedTime}</div>;
-            },
-        }, {
-            accessorKey: "startTime",
-            header: "Start Time",
-            cell: ({ row }) => {
-                const formattedTime = new Date(row.getValue("startTime")).toLocaleTimeString();
+  const table = useReactTable({
+    data: bookings,
+    columns,
+    getCoreRowModel: getCoreRowModel(),
+    onColumnFiltersChange: setColumnFilters,
+    getFilteredRowModel: getFilteredRowModel(),
+    state: {
+      columnFilters,
+    },
+  });
 
-                return <div>{formattedTime}</div>;
-            },
-        },
-        {
-            accessorKey: "endTime",
-            header: "End Time",
-            cell: ({ row }) => {
-                const formattedTime = new Date(row.getValue("endTime")).toLocaleTimeString();
+  const clearAllFilters = () => {
+    table.getAllColumns().forEach((column) => {
+      if (column.id != "eventTypeId") {
+        column.setFilterValue(undefined);
+      }
+    });
+  };
 
-                return <div>{formattedTime}</div>;
-            },
-        },
-        {
-            id: "actions",
-            cell: ({ row }) => {
-                const booking = row.original
+  return (
+    <>
+      <div className="flex gap-2 items-center">
+        <Select
+          value={table.getColumn("eventTypeId")?.getFilterValue() ?? ""}
+          onValueChange={(value) => {
+            // Convert value to a number before setting it to the filter
+            const eventTypeId = Number(value);
+            table.getColumn("eventTypeId")?.setFilterValue(`${eventTypeId}`);
+          }}
+        >
+          <SelectTrigger className="max-w-xs w-fit">
+            <span className="text-xl py-4 font-black pr-4">
+              {(() => {
+                const filterValue = table
+                  .getColumn("eventTypeId")
+                  ?.getFilterValue();
+                const selectedEvent = events?.find(
+                  (event) => event.id == filterValue
+                );
+                return selectedEvent ? selectedEvent.title : "All Events";
+              })()}
+            </span>
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value={undefined}>All Events</SelectItem>
+            {events &&
+              events.map((event) => (
+                <SelectItem key={event.id} value={String(event.id)}>
+                  {event.title}
+                </SelectItem>
+              ))}
+          </SelectContent>
+        </Select>
+        <div className="text-2xl py-4 font-black">Bookings</div>
+      </div>
+      <div className="rounded-md border">
+        <div className="flex items-center p-4 justify-between">
+          <div className="flex gap-2  w-full items-center">
+            <Input
+              placeholder="Search booking"
+              value={
+                (table.getColumn("title")?.getFilterValue() as string) ?? ""
+              }
+              onChange={(event) =>
+                table.getColumn("title")?.setFilterValue(event.target.value)
+              }
+              className="max-w-sm w-full"
+            />
+            <Select
+              className="w-fit"
+              value={
+                (table
+                  .getColumn("status")
+                  ?.getFilterValue() as BookingStatus) ?? ""
+              }
+              onValueChange={(value) =>
+                table.getColumn("status")?.setFilterValue(value)
+              }
+            >
+              <SelectTrigger className="w-fit">
+                <span className="pr-5">
+                  {table.getColumn("status")?.getFilterValue() ||
+                    "Select Status"}
+                </span>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value={BookingStatus.PENDING}>Pending</SelectItem>
+                <SelectItem value={BookingStatus.ACCEPTED}>Accepted</SelectItem>
+                <SelectItem value={BookingStatus.CANCELLED}>
+                  Cancelled
+                </SelectItem>
+              </SelectContent>
+            </Select>
 
-                return (
-                    <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" className="h-8 w-8 p-0">
-                                <span className="sr-only">Open menu</span>
-                                <MoreHorizontal className="h-4 w-4" />
-                            </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                            <DropdownMenuLabel className="cursor-pointer" onClick={() => setSelectedBooking(booking)}>View Booking  </DropdownMenuLabel>
-                            <DropdownMenuSeparator />
-                            {booking.status !== BookingStatus.CANCELLED && (
-                                <DropdownMenuItem onClick={() => cancelBookingFunc(booking.id)}>
-                                    Cancel Booking
-                                </DropdownMenuItem>
-                            )}
-                            {booking.status !== BookingStatus.ACCEPTED && (
-                                <DropdownMenuItem onClick={() => acceptBookingFunc(booking.id)}>
-                                    Accept Booking
-                                </DropdownMenuItem>
-                            )}
-                            {booking.status === BookingStatus.CANCELLED && (
-                                <DropdownMenuItem onClick={() => cancelBookingFunc(booking.id)}>
-                                    Delete Booking
-                                </DropdownMenuItem>
-                            )}
-                            <DropdownMenuItem
-                                onClick={() => navigator.clipboard.writeText(booking.id.toString())}
-                            >
-                                Copy booking ID
-                            </DropdownMenuItem>
-                        </DropdownMenuContent>
-                    </DropdownMenu>
-                )
-            },
-        },
-    ];
+            <Button onClick={clearAllFilters} variant="outline">
+              <RiCloseLine /> Clear Filters
+            </Button>
+          </div>
 
-    const table = useReactTable({
-        data: bookings,
-        columns,
-        getCoreRowModel: getCoreRowModel(),
-        onColumnFiltersChange: setColumnFilters,
-        getFilteredRowModel: getFilteredRowModel(),
-        state: {
-            columnFilters,
-        },
-    })
+          <div className="flex gap-2 items-center">
+            <Button onClick={fetchBookings} className="gap-2">
+              <RiRefreshLine /> Refresh
+            </Button>
+            <Button onClick={() => setOpenAddBooking(true)} className="gap-2">
+              <RiAddLine /> Add Booking
+            </Button>
+          </div>
+        </div>
+        <Table>
+          <TableHeader>
+            {table.getHeaderGroups().map((headerGroup, index) => (
+              <TableRow key={index}>
+                {headerGroup.headers.map((header, index) => {
+                  return (
+                    <TableHead key={index}>
+                      {header.isPlaceholder
+                        ? null
+                        : flexRender(
+                            header.column.columnDef.header,
+                            header.getContext()
+                          )}
+                    </TableHead>
+                  );
+                })}
+              </TableRow>
+            ))}
+          </TableHeader>
 
-
-    return (
-        <>
-            <div className="text-2xl py-4 font-black">
-                Bookings
-            </div>
-            <div className="rounded-md border">
-                <div className="flex items-center p-4">
-
-                    <Input
-                        placeholder="Search booking"
-                        value={(table.getColumn("title")?.getFilterValue() as string) ?? ""}
-                        onChange={(event) =>
-                            table.getColumn("title")?.setFilterValue(event.target.value)
-                        }
-                        className="max-w-sm"
-                    />
-                </div>
-                <Table>
-                    <TableHeader>
-                        {table.getHeaderGroups().map((headerGroup) => (
-                            <TableRow key={headerGroup.id}>
-                                {headerGroup.headers.map((header) => {
-                                    return (
-                                        <TableHead key={header.id}>
-                                            {header.isPlaceholder
-                                                ? null
-                                                : flexRender(
-                                                    header.column.columnDef.header,
-                                                    header.getContext()
-                                                )}
-                                        </TableHead>
-                                    )
-                                })}
-                            </TableRow>
-                        ))}
-                    </TableHeader>
-                    <TableBody>
-                        {table.getRowModel().rows?.length ? (
-                            table.getRowModel().rows.map((row) => (
-                                <TableRow
-                                    key={row.id}
-                                    data-state={row.getIsSelected() && "selected"}
-                                >
-                                    {row.getVisibleCells().map((cell) => (
-                                        <TableCell key={cell.id}>
-                                            {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                                        </TableCell>
-                                    ))}
-                                </TableRow>
-                            ))
-                        ) : (
-                            <TableRow>
-                                <TableCell colSpan={columns.length} className="h-24 text-center">
-                                    No results.
-                                </TableCell>
-                            </TableRow>
+          {!loading && (
+            <TableBody>
+              {table.getRowModel().rows?.length ? (
+                table.getRowModel().rows.map((row, index) => (
+                  <TableRow
+                    key={index}
+                    data-state={row.getIsSelected() && "selected"}
+                  >
+                    {row.getVisibleCells().map((cell, index) => (
+                      <TableCell key={index}>
+                        {flexRender(
+                          cell.column.columnDef.cell,
+                          cell.getContext()
                         )}
-                    </TableBody>
-                </Table>
-            </div>
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell
+                    colSpan={columns.length}
+                    className="h-24 text-center"
+                  >
+                    No results.
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          )}
+        </Table>
 
-            {selectedBooking && <ViewBooking booking={selectedBooking} onClose={() => setSelectedBooking(null)} />}
-        </>
-    )
-}
+        {loading && (
+          <div className="col-span-10 flex justify-center items-center h-[200px]">
+            <RiLoader2Line className={`text-3xl animate-spin`} />
+          </div>
+        )}
+      </div>
 
-export default Admin
+      {selectedBooking && (
+        <ViewBooking
+          booking={selectedBooking}
+          onClose={() => setSelectedBooking(null)}
+        />
+      )}
+      {openAddBooking && (
+        <AddBooking onClose={() => setOpenAddBooking(false)} />
+      )}
+    </>
+  );
+};
+
+export default Booking;
