@@ -67,7 +67,7 @@ import {
 } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { format } from "date-fns";
-import { createBooking } from "@/api/bookings";
+import { useBookingStore } from "@/api/bookings";
 
 interface AddBookingProps {
   onClose: () => void;
@@ -112,6 +112,7 @@ const formSchema = z
 
 const AddBooking = ({ onClose }: AddBookingProps) => {
   const [events, setEvents] = useState<any[]>([]);
+  const {createBooking, bookings} = useBookingStore()
 
   const fetchEvents = useCallback(async () => {
     const fetchedEvents = await getEvents();

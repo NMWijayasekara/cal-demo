@@ -1,5 +1,5 @@
 "use client";
-import { acceptBooking, cancelBooking, getBookings } from "@/api/bookings";
+import { useBookingStore } from "@/api/bookings";
 import AddBooking from "@/app/admin/bookings/components/AddBooking";
 import ViewBooking from "@/app/admin/bookings/components/ViewBooking";
 import BookingStatusBadge from "@/app/admin/bookings/components/BookingStatusBadge";
@@ -51,18 +51,15 @@ import { getEvents } from "@/api/events";
 import { format } from "date-fns";
 
 const Booking = () => {
-  const [bookings, setBookings] = useState<Booking[]>([]);
-  const [events, setEvents] = useState<any[]>([]);
-  const [loading, setLoading] = useState(false);
+  const { bookings, loading, getBookings, cancelBooking, acceptBooking } =
+    useBookingStore();
+  const [events, setEvents] = useState<any[]>([])
   const [updatedStatusLoading, setUpdatedStatusLoading] = useState(null);
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
   const [openAddBooking, setOpenAddBooking] = useState(false);
 
   const fetchBookings = useCallback(async () => {
-    setLoading(true);
-    const fetchedBookings = await getBookings();
-    setBookings(fetchedBookings);
-    setLoading(false);
+    await getBookings();
   }, []);
 
   const fetchEvents = useCallback(async () => {
@@ -80,14 +77,6 @@ const Booking = () => {
     try {
       setUpdatedStatusLoading(bookingId);
       await cancelBooking(bookingId);
-
-      setBookings((prevBookings) =>
-        prevBookings.map((booking) =>
-          booking.id === bookingId
-            ? { ...booking, status: BookingStatus.CANCELLED }
-            : booking
-        )
-      );
       setUpdatedStatusLoading(null);
     } catch (error) {
       console.error("Failed to cancel booking:", error);
