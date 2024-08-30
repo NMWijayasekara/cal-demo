@@ -51,10 +51,9 @@ import { getEvents } from "@/api/events";
 import { format } from "date-fns";
 
 const Booking = () => {
-  const { bookings, loading, getBookings, cancelBooking, acceptBooking } =
+  const { bookings, loading, updateStatusLoading, getBookings, cancelBooking, acceptBooking } =
     useBookingStore();
   const [events, setEvents] = useState<any[]>([])
-  const [updatedStatusLoading, setUpdatedStatusLoading] = useState(null);
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
   const [openAddBooking, setOpenAddBooking] = useState(false);
 
@@ -64,7 +63,6 @@ const Booking = () => {
 
   const fetchEvents = useCallback(async () => {
     const fetchedEvents = await getEvents();
-    console.log(fetchedEvents);
     setEvents(fetchedEvents);
   }, []);
 
@@ -75,9 +73,7 @@ const Booking = () => {
 
   const cancelBookingFunc = async (bookingId: number) => {
     try {
-      setUpdatedStatusLoading(bookingId);
       await cancelBooking(bookingId);
-      setUpdatedStatusLoading(null);
     } catch (error) {
       console.error("Failed to cancel booking:", error);
     }
@@ -85,7 +81,6 @@ const Booking = () => {
 
   const acceptBookingFunc = async (bookingId: number) => {
     try {
-      setUpdatedStatusLoading(bookingId);
       await acceptBooking(bookingId);
 
       setBookings((prevBookings) =>
@@ -95,7 +90,6 @@ const Booking = () => {
             : booking
         )
       );
-      setUpdatedStatusLoading(null);
     } catch (error) {
       console.error("Failed to cancel booking:", error);
     }
@@ -109,7 +103,7 @@ const Booking = () => {
       header: "Status",
       cell: ({ row }) => {
         const bookingId = row.getValue("id");
-        const loadingStatus = bookingId == updatedStatusLoading ? true : false;
+        const loadingStatus = bookingId == updateStatusLoading ? true : false;
         return (
           <BookingStatusBadge
             loading={loadingStatus}

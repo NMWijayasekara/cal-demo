@@ -7,6 +7,7 @@ const CAL_API_KEY = process.env.NEXT_PUBLIC_CAL_API_KEY;
 interface BookingState {
     bookings: any[];
     loading: boolean;
+    updateStatusLoading: number | null;
     error: string | null;
     getBookings: () => Promise<void>;
     createBooking: (data: any) => Promise<void>;
@@ -17,6 +18,7 @@ interface BookingState {
   export const useBookingStore = create<BookingState>((set) => ({
     bookings: [],
     loading: false,
+    updateStatusLoading: null,
     error: null,
   
     // Fetch bookings
@@ -52,7 +54,7 @@ interface BookingState {
   
     // Cancel a booking
     cancelBooking: async (bookingId: number) => {
-      set({ loading: true, error: null });
+      set({ updateStatusLoading: bookingId, error: null });
       try {
         const response = await axios.patch(`https://api.cal.com/v1/bookings/${bookingId}?apiKey=${CAL_API_KEY}`, {
           status: BookingStatus.CANCELLED,
@@ -61,7 +63,7 @@ interface BookingState {
           bookings: state.bookings.map((booking) =>
             booking.id === bookingId ? { ...booking, status: BookingStatus.CANCELLED } : booking
           ),
-          loading: false,
+          updateStatusLoading: null,
         }));
       } catch (error) {
         set({ error: error.message, loading: false });
@@ -70,7 +72,7 @@ interface BookingState {
   
     // Accept a booking
     acceptBooking: async (bookingId: number) => {
-      set({ loading: true, error: null });
+      set({ updateStatusLoading: bookingId, error: null });
       try {
         const response = await axios.patch(`https://api.cal.com/v1/bookings/${bookingId}?apiKey=${CAL_API_KEY}`, {
           status: BookingStatus.ACCEPTED,
@@ -79,7 +81,7 @@ interface BookingState {
           bookings: state.bookings.map((booking) =>
             booking.id === bookingId ? { ...booking, status: BookingStatus.ACCEPTED } : booking
           ),
-          loading: false,
+          updateStatusLoading: null,
         }));
       } catch (error) {
         set({ error: error.message, loading: false });
