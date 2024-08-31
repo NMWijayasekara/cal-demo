@@ -1,5 +1,5 @@
 "use client";
-import { getEvents } from "@/api/events";
+import { getEvents } from "@/store/events";
 import { EventsStatus } from "@/app/admin/events/types";
 import { Button } from "@/components/ui/button";
 import {

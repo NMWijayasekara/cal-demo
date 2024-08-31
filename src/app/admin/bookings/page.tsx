@@ -1,5 +1,5 @@
 "use client";
-import { useBookingStore } from "@/api/bookings";
+import { useBookingStore } from "@/store/bookings";
 import AddBooking from "@/app/admin/bookings/components/AddBooking";
 import ViewBooking from "@/app/admin/bookings/components/ViewBooking";
 import BookingStatusBadge from "@/app/admin/bookings/components/BookingStatusBadge";
@@ -47,7 +47,7 @@ import {
 import { MoreHorizontal } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { Events, EventsStatus } from "@/app/admin/events/types";
-import { getEvents } from "@/api/events";
+import { getEvents } from "@/store/events";
 import { format } from "date-fns";
 
 const Booking = () => {
@@ -119,6 +119,12 @@ const Booking = () => {
     {
       accessorKey: "eventTypeId",
       header: "Event ID",
+      filterFn: (row, columnId, filterValue) => {
+        if (filterValue == row.getValue("eventTypeId")) {
+          return true
+        }
+        return false
+      }
     },
     {
       accessorKey: "title",
@@ -218,15 +224,14 @@ const Booking = () => {
     });
   };
 
+
   return (
     <>
       <div className="flex gap-2 items-center">
         <Select
           value={table.getColumn("eventTypeId")?.getFilterValue() ?? ""}
           onValueChange={(value) => {
-            // Convert value to a number before setting it to the filter
-            const eventTypeId = Number(value);
-            table.getColumn("eventTypeId")?.setFilterValue(`${eventTypeId}`);
+            table.getColumn("eventTypeId")?.setFilterValue(value);
           }}
         >
           <SelectTrigger className="max-w-xs w-fit">

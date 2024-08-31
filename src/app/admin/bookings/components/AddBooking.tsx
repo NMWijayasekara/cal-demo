@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { acceptBooking, cancelBooking, getBookings } from "@/api/bookings";
+import { acceptBooking, cancelBooking, getBookings } from "@/store/bookings";
 import ViewBooking from "@/app/admin/bookings/components/ViewBooking";
 import BookingStatusBadge from "@/app/admin/bookings/components/BookingStatusBadge";
 import { Booking, BookingStatus } from "@/app/admin/bookings/types";
@@ -58,7 +58,7 @@ import { useCallback, useEffect, useState } from "react";
 import { Events, EventsStatus } from "@/app/admin/events/types";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
-import { getEvents } from "@/api/events";
+import { getEvents } from "@/store/events";
 import { Textarea } from "@/components/ui/textarea";
 import {
   Popover,
@@ -67,7 +67,7 @@ import {
 } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { format } from "date-fns";
-import { useBookingStore } from "@/api/bookings";
+import { useBookingStore } from "@/store/bookings";
 
 interface AddBookingProps {
   onClose: () => void;
