@@ -6,6 +6,7 @@ const CAL_API_KEY = process.env.NEXT_PUBLIC_CAL_API_KEY;
 
 interface BookingState {
     bookings: any[];
+    fetching: boolean;
     loading: boolean;
     updateStatusLoading: number | null;
     error: string | null;
@@ -17,18 +18,19 @@ interface BookingState {
   
   export const useBookingStore = create<BookingState>((set) => ({
     bookings: [],
+    fetching: false,
     loading: false,
     updateStatusLoading: null,
     error: null,
   
     // Fetch bookings
     getBookings: async () => {
-      set({ loading: true, error: null });
+      set({ fetching: true, error: null });
       try {
         const response = await axios.get(`https://api.cal.com/v1/bookings?apiKey=${CAL_API_KEY}`);
-        set({ bookings: response.data.bookings, loading: false });
+        set({ bookings: response.data.bookings, fetching: false });
       } catch (error) {
-        set({ error: error.message, loading: false });
+        set({ error: (error as any)?.message, fetching: false });
       }
     },
   
@@ -36,6 +38,7 @@ interface BookingState {
     createBooking: async (data) => {
       set({ loading: true, error: null });
       try {
+        console.log(data)
         const response = await axios.post(`https://api.cal.com/v1/bookings?apiKey=${CAL_API_KEY}`, {
           status: BookingStatus.PENDING,
           language: 'en',
@@ -44,11 +47,11 @@ interface BookingState {
           ...data,
         });
         set((state) => ({
-          bookings: [...state.bookings, response.data.booking],
+          bookings: [...state.bookings, response.data],
           loading: false,
         }));
-      } catch (error) {
-        set({ error: error.message, loading: false });
+      } catch (error: any) {
+        set({ error: (error as any)?.message, loading: false });
       }
     },
   
@@ -65,8 +68,8 @@ interface BookingState {
           ),
           updateStatusLoading: null,
         }));
-      } catch (error) {
-        set({ error: error.message, loading: false });
+      } catch (error: any) {
+        set({ error: (error as any).message, loading: false });
       }
     },
   
@@ -83,8 +86,31 @@ interface BookingState {
           ),
           updateStatusLoading: null,
         }));
-      } catch (error) {
-        set({ error: error.message, loading: false });
+      } catch (error: any) {
+        set({ error: error?.message, loading: false });
       }
     },
-  }));
+
+    addAttendee: async (bookingId: number, name: string, email: string) => {
+     set({loading: true, error: null});
+     try {
+      const response = await axios.post(`https://api.cal.com/v1/attendees?apiKey=${CAL_API_KEY}`, {
+        timeZone: "Asia/Colombo",
+        bookingId: bookingId,
+        name: name,
+        email: email,
+      })
+
+      console.log(response)
+
+      // set((state) => ({
+      //   bookings: state.bookings.map((booking) =>
+      //     booking.id === bookingId ? { ...booking, status: BookingStatus.ACCEPTED } : booking
+      //   ),
+      // }));
+     } catch (error: any) {
+      set({ error: error?.message, loading: false });
+     }
+  }
+
+}));

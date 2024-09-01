@@ -2,7 +2,7 @@ import apiInstance from '@/axios/instance';
 import Loader from '@/components/Loader';
 import Login from '@/components/Login';
 import { useRouter } from 'next/navigation';
-import React, { createContext, PropsWithChildren, useContext, useEffect, useState } from 'react';
+import React, { createContext, PropsWithChildren, useContext, useEffect, useState, useCallback } from 'react';
 
 interface AuthContextType {
     user: any;
@@ -72,7 +72,7 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
         setUser(responseData);
     };
 
-    const checkAuth = async () => {
+    const checkAuth = useCallback(async () => {
         try {
             const response = await apiInstance.get('/api/v1/auth/check-auth');
 
@@ -83,7 +83,7 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
         } catch (error) {
             console.error(error);
         }
-    };
+    });
 
     useEffect(() => {
         checkAuth();

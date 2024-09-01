@@ -2,7 +2,7 @@ import React from 'react'
 import { BookingStatus } from "@/app/admin/bookings/types";
 import { RiLoader2Line } from "@remixicon/react";
 
-const BookingStatusBadge = ({loading, status}: {loading: boolean, status: BookingStatus}) => {
+const BookingStatusBadge = ({loading, status}: {loading?: boolean, status: BookingStatus}) => {
   if (loading) {
     return (
       <div className="my-4 py-1 px-2 h-fit w-fit">

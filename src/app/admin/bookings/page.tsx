@@ -49,27 +49,34 @@ import { useCallback, useEffect, useState } from "react";
 import { Events, EventsStatus } from "@/app/admin/events/types";
 import { getEvents } from "@/store/events";
 import { format } from "date-fns";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { useEventsStore } from "@/store/events";
 
 const Booking = () => {
-  const { bookings, loading, updateStatusLoading, getBookings, cancelBooking, acceptBooking } =
-    useBookingStore();
-  const [events, setEvents] = useState<any[]>([])
+  const {
+    bookings,
+    fetching,
+    updateStatusLoading,
+    getBookings,
+    cancelBooking,
+    acceptBooking,
+  } = useBookingStore();
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
   const [openAddBooking, setOpenAddBooking] = useState(false);
+  const { events, getEvents } = useEventsStore();
 
   const fetchBookings = useCallback(async () => {
     await getBookings();
-  }, []);
+  }, [getBookings]);
 
   const fetchEvents = useCallback(async () => {
-    const fetchedEvents = await getEvents();
-    setEvents(fetchedEvents);
-  }, []);
+    await getEvents();
+  }, [getEvents]);
 
   useEffect(() => {
     fetchBookings();
-    fetchEvents();
-  }, []);
+    fetchEvents;
+  }, [fetchBookings, fetchEvents]);
 
   const cancelBookingFunc = async (bookingId: number) => {
     try {
@@ -121,10 +128,10 @@ const Booking = () => {
       header: "Event ID",
       filterFn: (row, columnId, filterValue) => {
         if (filterValue == row.getValue("eventTypeId")) {
-          return true
+          return true;
         }
-        return false
-      }
+        return false;
+      },
     },
     {
       accessorKey: "title",
@@ -136,6 +143,7 @@ const Booking = () => {
       cell: ({ row }) => {
         return <div>{format(new Date(row.getValue("startTime")), "PPP")}</div>;
       },
+      sortType: "datetime",
     },
     {
       accessorKey: "startTime",
@@ -216,6 +224,11 @@ const Booking = () => {
     },
   });
 
+  useEffect(() => {
+    fetchBookings();
+    fetchEvents();
+  }, [fetchBookings, fetchEvents]);
+
   const clearAllFilters = () => {
     table.getAllColumns().forEach((column) => {
       if (column.id != "eventTypeId") {
@@ -223,7 +236,6 @@ const Booking = () => {
       }
     });
   };
-
 
   return (
     <>
@@ -312,60 +324,65 @@ const Booking = () => {
             </Button>
           </div>
         </div>
-        <Table>
-          <TableHeader>
-            {table.getHeaderGroups().map((headerGroup, index) => (
-              <TableRow key={index}>
-                {headerGroup.headers.map((header, index) => {
-                  return (
-                    <TableHead key={index}>
-                      {header.isPlaceholder
-                        ? null
-                        : flexRender(
-                            header.column.columnDef.header,
-                            header.getContext()
-                          )}
-                    </TableHead>
-                  );
-                })}
-              </TableRow>
-            ))}
-          </TableHeader>
-
-          {!loading && (
-            <TableBody>
-              {table.getRowModel().rows?.length ? (
-                table.getRowModel().rows.map((row, index) => (
-                  <TableRow
-                    key={index}
-                    data-state={row.getIsSelected() && "selected"}
-                  >
-                    {row.getVisibleCells().map((cell, index) => (
-                      <TableCell key={index}>
-                        {flexRender(
-                          cell.column.columnDef.cell,
-                          cell.getContext()
-                        )}
-                      </TableCell>
-                    ))}
-                  </TableRow>
-                ))
-              ) : (
-                <TableRow>
-                  <TableCell
-                    colSpan={columns.length}
-                    className="h-24 text-center"
-                  >
-                    No results.
-                  </TableCell>
+        <ScrollArea
+          className={`${
+            fetching ? "h-0" : "h-[500px]"
+          } relative w-full border p-4`}
+        >
+          <Table>
+            <TableHeader className="sticky top-0 bg-white">
+              {table.getHeaderGroups().map((headerGroup, index) => (
+                <TableRow key={index}>
+                  {headerGroup.headers.map((header, index) => {
+                    return (
+                      <TableHead key={index}>
+                        {header.isPlaceholder
+                          ? null
+                          : flexRender(
+                              header.column.columnDef.header,
+                              header.getContext()
+                            )}
+                      </TableHead>
+                    );
+                  })}
                 </TableRow>
-              )}
-            </TableBody>
-          )}
-        </Table>
+              ))}
+            </TableHeader>
 
-        {loading && (
-          <div className="col-span-10 flex justify-center items-center h-[200px]">
+            {!fetching && (
+              <TableBody>
+                {table.getRowModel().rows?.length ? (
+                  table.getRowModel().rows.map((row, index) => (
+                    <TableRow
+                      key={index}
+                      data-state={row.getIsSelected() && "selected"}
+                    >
+                      {row.getVisibleCells().map((cell, index) => (
+                        <TableCell key={index}>
+                          {flexRender(
+                            cell.column.columnDef.cell,
+                            cell.getContext()
+                          )}
+                        </TableCell>
+                      ))}
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell
+                      colSpan={columns.length}
+                      className="h-24 text-center"
+                    >
+                      No results.
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            )}
+          </Table>
+        </ScrollArea>
+        {fetching && (
+          <div className="col-span-10 w-full flex justify-center items-center h-[200px]">
             <RiLoader2Line className={`text-3xl animate-spin`} />
           </div>
         )}

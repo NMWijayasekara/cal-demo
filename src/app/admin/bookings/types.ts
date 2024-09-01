@@ -10,7 +10,7 @@ export type Booking = {
     attendees: Attendee[];
     user: User;
     metadata: Record<string, any>;
-    status: string;
+    status: BookingStatus;
     responses: {
         email: string;
         name: string;
