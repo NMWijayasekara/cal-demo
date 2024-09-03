@@ -2,6 +2,7 @@ import { Booking, BookingStatus } from "@/app/admin/bookings/types";
 import { Button } from "@/components/ui/button";
 import { RiCalendar2Line, RiEdit2Line, RiTimeLine, RiUserAddLine } from "@remixicon/react";
 import BookingStatusBadge from "./BookingStatusBadge";
+import ResheduleBooking from "./ResheduleBooking";
 
 interface ViewBookingProps {
   booking: Booking;
@@ -21,9 +22,11 @@ const ViewBooking = ({ booking, onClose }: ViewBookingProps) => {
         <div className="font-bold text-xl">{booking.title}</div>
         <div className="flex justify-between items-center">
           <BookingStatusBadge status={booking.status} />
+          <ResheduleBooking bookingId={booking.id} eventId={booking.eventTypeId}>
           <Button size={"sm"} className="font-black mb-1 flex gap-2">
             <RiEdit2Line />  Reshedule
           </Button>
+          </ResheduleBooking>
         </div>
 
         <div className="flex items-center border-2 p-4 rounded-lg">
@@ -45,9 +48,9 @@ const ViewBooking = ({ booking, onClose }: ViewBookingProps) => {
         <div className="mt-5">
           <div className="flex justify-between items-center">
             <div className="font-bold text-xl w-fit rounded-lg ">Attendees</div>
-            <Button size={"sm"} className="font-black mb-1 flex gap-2">
+            {/* <Button size={"sm"} className="font-black mb-1 flex gap-2">
               <RiUserAddLine /> Add Attendee
-            </Button>
+            </Button> */}
           </div>
           <div className="border-2 rounded-lg p-4">
             {booking.attendees.map((attendee, index) => (

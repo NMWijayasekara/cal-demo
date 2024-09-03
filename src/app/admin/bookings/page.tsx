@@ -326,7 +326,7 @@ const Booking = () => {
         </div>
         <ScrollArea
           className={`${
-            fetching ? "h-0" : "h-[500px]"
+            fetching ? "h-0" : "h-[50vh]"
           } relative w-full border p-4`}
         >
           <Table>
