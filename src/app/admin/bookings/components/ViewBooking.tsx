@@ -1,6 +1,11 @@
 import { Booking, BookingStatus } from "@/app/admin/bookings/types";
 import { Button } from "@/components/ui/button";
-import { RiCalendar2Line, RiEdit2Line, RiTimeLine, RiUserAddLine } from "@remixicon/react";
+import {
+  RiCalendar2Line,
+  RiEdit2Line,
+  RiTimeLine,
+  RiUserAddLine,
+} from "@remixicon/react";
 import BookingStatusBadge from "./BookingStatusBadge";
 import ResheduleBooking from "./ResheduleBooking";
 
@@ -22,10 +27,13 @@ const ViewBooking = ({ booking, onClose }: ViewBookingProps) => {
         <div className="font-bold text-xl">{booking.title}</div>
         <div className="flex justify-between items-center">
           <BookingStatusBadge status={booking.status} />
-          <ResheduleBooking bookingId={booking.id} eventId={booking.eventTypeId}>
-          <Button size={"sm"} className="font-black mb-1 flex gap-2">
-            <RiEdit2Line />  Reshedule
-          </Button>
+          <ResheduleBooking
+            bookingId={booking.id}
+            eventId={booking.eventTypeId}
+          >
+            <Button size={"sm"} className="font-black mb-1 flex gap-2">
+              <RiEdit2Line /> Reshedule
+            </Button>
           </ResheduleBooking>
         </div>
 

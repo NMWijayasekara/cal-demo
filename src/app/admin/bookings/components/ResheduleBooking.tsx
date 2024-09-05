@@ -18,17 +18,21 @@ import {
 import { Calendar } from "@/components/ui/calendar";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+} from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { RiLoader2Line } from "@remixicon/react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { useBookingStore } from "@/store/bookings";
 import { useEventsStore } from "@/store/events";
-import generateAvailableTimes from "@/utils/generateTimeSlots";
+import generateAvailableTimes from "@/lib/generateTimeSlots";
 import { Textarea } from "@/components/ui/textarea";
 import { z } from "zod";
-
 
 const formSchema = z.object({
   date: z.date({
@@ -38,10 +42,20 @@ const formSchema = z.object({
   end: z.string(),
 });
 
-const ResheduleBooking = ({ children, eventId, bookingId }) => {
+interface ResheduleBookingProps extends PropsWithChild {
+  eventId: number;
+  bookingId: number;
+}
+
+const ResheduleBooking = ({
+  children,
+  eventId,
+  bookingId,
+}: ResheduleBookingProps) => {
   const { events, getEvents } = useEventsStore();
-  const { createBooking, loading } = useBookingStore();
+  const { rescheduleBooking, loading } = useBookingStore();
   const [selectedTimeSlot, setSelectedTimeSlot] = useState<number | null>(null);
+  const [open, setOpen] = useState(false); // Manage dialog open state
 
   const fetchEvents = useCallback(async () => {
     await getEvents();
@@ -60,7 +74,7 @@ const ResheduleBooking = ({ children, eventId, bookingId }) => {
     },
   });
 
-  const onSubmit = async (data: { date?: any; start?: any; end?: any; }) => {
+  const onSubmit = async (data: { date?: any; start?: any; end?: any }) => {
     const { date, start, end } = data;
 
     // Extract hours and minutes from start and end times
@@ -79,16 +93,12 @@ const ResheduleBooking = ({ children, eventId, bookingId }) => {
     console.log("End Date and Time:", endDateTime);
 
     try {
-      await createBooking({
-        ...data,
-        start: startDateTime,
-        end: endDateTime,
-      });
+      await rescheduleBooking(bookingId, startDateTime, endDateTime);
     } catch (error) {
       console.error(error);
       alert("Submit again");
     } finally {
-      onClose();
+      setOpen(false);
     }
   };
 
@@ -113,63 +123,69 @@ const ResheduleBooking = ({ children, eventId, bookingId }) => {
   };
 
   return (
-    <Dialog>
+    <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Reschedule Booking</DialogTitle>
         </DialogHeader>
         <Form {...form}>
-          <form
-            onSubmit={form.handleSubmit(onSubmit)}
-            className="flex items-center justify-center w-full h-[300px]"
-          >
-            <FormField
-              control={form.control}
-              name="date"
-              render={({ field }) => (
-                <FormItem>
-                  <Calendar
-                    mode="single"
-                    selected={field.value ? new Date(field.value) : undefined}
-                    onSelect={field.onChange}
-                    disabled={(date) => {
-                      const today = new Date();
-                      today.setHours(0, 0, 0, 0);
+          <form onSubmit={form.handleSubmit(onSubmit)} className="text-center">
+            <div className="flex items-center justify-center w-full h-[300px]">
+              <FormField
+                control={form.control}
+                name="date"
+                render={({ field }) => (
+                  <FormItem>
+                    <Calendar
+                      mode="single"
+                      selected={field.value ? new Date(field.value) : undefined}
+                      onSelect={field.onChange}
+                      disabled={(date) => {
+                        const today = new Date();
+                        today.setHours(0, 0, 0, 0);
 
-                      // Disable past dates
-                      if (date < today) {
-                        return true;
-                      }
+                        // Disable past dates
+                        if (date < today) {
+                          return true;
+                        }
 
-                      // Disable Saturdays (6) and Sundays (0)
-                      const day = date.getDay();
-                      return day === 0 || day === 6;
-                    }}
-                  />
-                  <FormMessage />
-                </FormItem>
+                        // Disable Saturdays (6) and Sundays (0)
+                        const day = date.getDay();
+                        return day === 0 || day === 6;
+                      }}
+                    />
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <ScrollArea type="always" className="h-full">
+                <div className="grid gap-2 pr-3">
+                  {availableTimeSlots.map((availableTime, index) => (
+                    <Button
+                      type="button"
+                      onClick={() => setAvailableTimeSlot(availableTime, index)}
+                      variant="outline"
+                      key={index}
+                      className={`${
+                        selectedTimeSlot === index
+                          ? "bg-slate-900 text-white"
+                          : ""
+                      }`}
+                    >
+                      {availableTime.start} - {availableTime.end}
+                    </Button>
+                  ))}
+                </div>
+              </ScrollArea>
+            </div>
+            <Button className="mt-5 " disabled={loading}>
+              {loading ? (
+                <RiLoader2Line className="animate-spin" />
+              ) : (
+                "Reschedule"
               )}
-            />
-            <ScrollArea type="always" className="h-full">
-              <div className="grid gap-2 pr-3">
-                {availableTimeSlots.map((availableTime, index) => (
-                  <Button
-                    type="button"
-                    onClick={() => setAvailableTimeSlot(availableTime, index)}
-                    variant="outline"
-                    key={index}
-                    className={`${
-                      selectedTimeSlot === index
-                        ? "bg-slate-900 text-white"
-                        : ""
-                    }`}
-                  >
-                    {availableTime.start} - {availableTime.end}
-                  </Button>
-                ))}
-              </div>
-            </ScrollArea>
+            </Button>
           </form>
         </Form>
       </DialogContent>

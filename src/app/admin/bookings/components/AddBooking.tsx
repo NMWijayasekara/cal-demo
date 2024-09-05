@@ -22,7 +22,7 @@ import { useForm } from "react-hook-form";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useBookingStore } from "@/store/bookings";
 import { useEventsStore } from "@/store/events";
-import generateAvailableTimes from "@/utils/generateTimeSlots";
+import generateAvailableTimes from "@/lib/generateTimeSlots";
 import { Textarea } from "@/components/ui/textarea";
 import { Calendar } from "@/components/ui/calendar";
 
@@ -73,7 +73,12 @@ const AddBooking = ({ onClose }: AddBookingProps) => {
     },
   });
 
-  const onSubmit = async (data: { eventTypeId?: any; date?: any; start?: any; end?: any; }) => {
+  const onSubmit = async (data: {
+    eventTypeId?: any;
+    date?: any;
+    start?: any;
+    end?: any;
+  }) => {
     const { date, start, end } = data;
 
     // Extract hours and minutes from start and end times
@@ -239,17 +244,19 @@ const AddBooking = ({ onClose }: AddBookingProps) => {
                         <FormItem>
                           <Calendar
                             mode="single"
-                            selected={field.value ? new Date(field.value) : undefined}
+                            selected={
+                              field.value ? new Date(field.value) : undefined
+                            }
                             onSelect={field.onChange}
                             disabled={(date) => {
                               const today = new Date();
                               today.setHours(0, 0, 0, 0);
-                          
+
                               // Disable past dates
                               if (date < today) {
                                 return true;
                               }
-                          
+
                               // Disable Saturdays (6) and Sundays (0)
                               const day = date.getDay();
                               return day === 0 || day === 6;

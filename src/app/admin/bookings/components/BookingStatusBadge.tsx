@@ -6,7 +6,7 @@ const BookingStatusBadge = ({loading, status}: {loading?: boolean, status: Booki
   if (loading) {
     return (
       <div className="my-4 py-1 px-2 h-fit w-fit">
-        <RiLoader2Line className={`text-3xl animate-spin`} />
+        <RiLoader2Line className="text-3xl animate-spin" />
       </div>
     )
   }

@@ -35,7 +35,7 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
     const login = async (data: any) => {
         try {
             setLoading(true)
-            const response = await apiInstance.post('/api/v1/auth/login', data);
+            const response = await apiInstance.post('/api/auth/login', data);
 
             console.log(response)
 
@@ -54,7 +54,7 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
 
     const createUser = async (data: any): Promise<void> => {
         setLoading(true)
-        const response = await apiInstance.post('/api/v1/auth/create-user', data);
+        const response = await apiInstance.post('/api/auth/create-user', data);
 
         setLoading(false)
 
@@ -64,7 +64,7 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
 
     const logout = async () => {
         setLoading(true)
-        const response = await apiInstance.get('/api/v1/auth/logout');
+        const response = await apiInstance.get('/api/auth/logout');
 
         setLoading(false)
 
@@ -74,7 +74,7 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
 
     const checkAuth = useCallback(async () => {
         try {
-            const response = await apiInstance.get('/api/v1/auth/check-auth');
+            const response = await apiInstance.get('/api/auth/check-auth');
 
             const responseData = await response.data.data;
 
