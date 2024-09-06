@@ -1,9 +1,8 @@
-import { NextApiRequest, NextApiResponse } from "next";
 import { hash } from "bcryptjs";
 import { prisma } from "@/lib/prisma";
-import { generateTokens, setAuthCookies } from "@/lib/auth";
+import { generateTokens } from "@/lib/auth";
 
-const ACCESS_TOKEN_EXPIRATION_TIME = 60 * 60 * 1000;
+const ACCESS_TOKEN_EXPIRATION_TIME = 60 * 60 * 1000; // 1 hour in milliseconds
 
 export async function POST(request: Request) {
   try {
@@ -29,20 +28,41 @@ export async function POST(request: Request) {
     const accessToken = await generateTokens(user.id, user.email);
 
     // Set httpOnly cookies for tokens in the response headers
-    return new Response(`User created successfully: ${JSON.stringify(user)}`, {
-      status: 201,
-      headers: {
-        "Set-Cookie": `accessToken=${accessToken}; HttpOnly; Path=/; Max-Age=${ACCESS_TOKEN_EXPIRATION_TIME}`,
-      },
-    });
+    return new Response(
+      JSON.stringify({
+        message: "User created successfully",
+        data: user,
+      }),
+      {
+        status: 201,
+        headers: {
+          "Set-Cookie": `accessToken=${accessToken}; HttpOnly; Path=/; Max-Age=${ACCESS_TOKEN_EXPIRATION_TIME}`,
+          "Content-Type": "application/json",
+        },
+      }
+    );
   } catch (error) {
     if (error.code === "P2002") {
-      return new Response("User with email already exists", {
-        status: 400,
-      });
+      return new Response(
+        JSON.stringify({
+          message: "User with email already exists",
+          data: null,
+        }),
+        {
+          status: 400,
+          headers: { "Content-Type": "application/json" },
+        }
+      );
     }
-    return new Response(`Error creating user: ${error.message}`, {
-      status: 500,
-    });
+    return new Response(
+      JSON.stringify({
+        message: `Error creating user: ${error.message}`,
+        data: null,
+      }),
+      {
+        status: 500,
+        headers: { "Content-Type": "application/json" },
+      }
+    );
   }
 }

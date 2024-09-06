@@ -6,9 +6,13 @@ export async function GET(request: Request) {
   const accessToken = cookieStore.get("accessToken");
 
   if (!accessToken) {
-    return new Response("No token provided", {
-      status: 401,
-    });
+    return new Response(
+      JSON.stringify({ message: "No token provided", data: null }),
+      {
+        status: 401,
+        headers: { "Content-Type": "application/json" },
+      }
+    );
   }
 
   try {
@@ -16,17 +20,35 @@ export async function GET(request: Request) {
     const user = await verifyToken(accessToken.value);
 
     if (!user) {
-      return new Response("Invalid token", {
-        status: 401,
-      });
+      return new Response(
+        JSON.stringify({ message: "Invalid token", data: null }),
+        {
+          status: 401,
+          headers: { "Content-Type": "application/json" },
+        }
+      );
     }
 
-    return new Response(`User authenticated: ${JSON.stringify(user)}`, {
-      status: 200,
-    });
+    return new Response(
+      JSON.stringify({
+        message: "User authenticated",
+        data: user, // Assuming `user` contains the necessary user info
+      }),
+      {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      }
+    );
   } catch (error) {
-    return new Response(`Error checking authentication: ${error.message}`, {
-      status: 500,
-    });
+    return new Response(
+      JSON.stringify({
+        message: `Error checking authentication: ${error.message}`,
+        data: null,
+      }),
+      {
+        status: 500,
+        headers: { "Content-Type": "application/json" },
+      }
+    );
   }
 }
