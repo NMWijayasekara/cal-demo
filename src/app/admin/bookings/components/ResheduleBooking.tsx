@@ -1,4 +1,10 @@
-import React, { useCallback, useEffect, useState, useMemo } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useState,
+  useMemo,
+  PropsWithChildren,
+} from "react";
 import {
   Dialog,
   DialogContent,
@@ -44,7 +50,7 @@ const formSchema = z.object({
   end: z.string(),
 });
 
-interface ResheduleBookingProps extends PropsWithChild {
+interface ResheduleBookingProps extends PropsWithChildren {
   eventId: number;
   booking: Booking;
 }
