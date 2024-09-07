@@ -1,5 +1,4 @@
 "use client";
-import { EventsStatus } from "@/app/admin/events/types";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -18,6 +17,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { useEventsStore } from "@/store/events";
 import { RiAddLine, RiLoader2Line, RiRefreshLine } from "@remixicon/react";
 import {
   ColumnDef,
@@ -29,13 +29,13 @@ import {
 } from "@tanstack/react-table";
 import { MoreHorizontal } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
-import { useEventsStore } from "@/store/events";
+import { EventType } from "./types";
 
 const Events = () => {
   const { events, getEvents, loading } = useEventsStore();
 
   const fetchEvents = useCallback(async () => {
-    const fetchedEvents = await getEvents();
+    await getEvents();
   }, [getEvents]);
 
   useEffect(() => {
@@ -74,10 +74,7 @@ const Events = () => {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuLabel
-                className="cursor-pointer"
-                onClick={() => setSelectedEvents(events)}
-              >
+              <DropdownMenuLabel className="cursor-pointer">
                 View Events{" "}
               </DropdownMenuLabel>
               <DropdownMenuSeparator />

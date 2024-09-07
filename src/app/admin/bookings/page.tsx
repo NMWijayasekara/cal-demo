@@ -40,19 +40,16 @@ import {
   ColumnFiltersState,
   flexRender,
   getCoreRowModel,
-  SelectColumnFilter,
   getFilteredRowModel,
   useReactTable,
 } from "@tanstack/react-table";
 import { MoreHorizontal } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
-import { Events, EventsStatus } from "@/app/admin/events/types";
-import { getEvents } from "@/store/events";
 import { format } from "date-fns";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useEventsStore } from "@/store/events";
 
-const Booking = () => {
+const BookingPage = () => {
   const {
     bookings,
     fetching,
@@ -89,14 +86,6 @@ const Booking = () => {
   const acceptBookingFunc = async (bookingId: number) => {
     try {
       await acceptBooking(bookingId);
-
-      setBookings((prevBookings) =>
-        prevBookings.map((booking) =>
-          booking.id === bookingId
-            ? { ...booking, status: BookingStatus.ACCEPTED }
-            : booking
-        )
-      );
     } catch (error) {
       console.error("Failed to cancel booking:", error);
     }
@@ -143,7 +132,6 @@ const Booking = () => {
       cell: ({ row }) => {
         return <div>{format(new Date(row.getValue("startTime")), "PPP")}</div>;
       },
-      sortType: "datetime",
     },
     {
       accessorKey: "startTime",
@@ -241,7 +229,7 @@ const Booking = () => {
     <>
       <div className="flex gap-2 items-center">
         <Select
-          value={table.getColumn("eventTypeId")?.getFilterValue() ?? ""}
+          value={`${table.getColumn("eventTypeId")?.getFilterValue()}` || ""}
           onValueChange={(value) => {
             table.getColumn("eventTypeId")?.setFilterValue(value);
           }}
@@ -260,7 +248,7 @@ const Booking = () => {
             </span>
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value={undefined}>All Events</SelectItem>
+            <SelectItem value={""}>All Events</SelectItem>
             {events &&
               events.map((event) => (
                 <SelectItem key={event.id} value={String(event.id)}>
@@ -285,7 +273,6 @@ const Booking = () => {
               className="max-w-sm w-full"
             />
             <Select
-              className="w-fit"
               value={
                 (table
                   .getColumn("status")
@@ -297,7 +284,7 @@ const Booking = () => {
             >
               <SelectTrigger className="w-fit">
                 <span className="pr-5">
-                  {table.getColumn("status")?.getFilterValue() ||
+                  {`${table.getColumn("status")?.getFilterValue()}` ||
                     "Select Status"}
                 </span>
               </SelectTrigger>
@@ -401,4 +388,4 @@ const Booking = () => {
   );
 };
 
-export default Booking;
+export default BookingPage;

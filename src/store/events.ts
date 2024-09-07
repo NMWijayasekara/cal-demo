@@ -1,10 +1,11 @@
-import {create} from 'zustand';
-import axios from 'axios';
-import { Booking } from '@/app/admin/bookings/types';
+import { Booking } from "@/app/admin/bookings/types";
+import { EventType } from "@/app/admin/events/types";
+import axios from "axios";
+import { create } from "zustand";
 
 const CAL_API_KEY = process.env.NEXT_PUBLIC_CAL_API_KEY;
 
-interface EventsStoreProps{
+interface EventsStoreProps {
   events: EventType[];
   loading: boolean;
   error: any;
@@ -20,7 +21,9 @@ export const useEventsStore = create<EventsStoreProps>((set) => ({
   getEvents: async () => {
     set({ loading: true, error: null });
     try {
-      const response = await axios.get(`https://api.cal.com/v1/event-types?apiKey=${CAL_API_KEY}`);
+      const response = await axios.get(
+        `https://api.cal.com/v1/event-types?apiKey=${CAL_API_KEY}`
+      );
       set({ events: response.data.event_types, loading: false });
     } catch (error: any) {
       set({ error: error.message as any, loading: false });

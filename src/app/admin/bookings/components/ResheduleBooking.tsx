@@ -155,7 +155,7 @@ const ResheduleBooking = ({
                         let startTime = new Date(field.value); // Assuming field.value contains the startTime
                         startTime.setHours(0, 0, 0, 0);
 
-                        const isWeekday = (date) => {
+                        const isWeekday = (date: Date) => {
                           const day = date.getDay();
                           return day >= 1 && day <= 5; // Monday to Friday
                         };
@@ -201,7 +201,7 @@ const ResheduleBooking = ({
                   {availableTimeSlots.map((availableTime, index) => (
                     <Button
                       type="button"
-                      onClick={() => setAvailableTimeSlot(availableTime, index)}
+                      onClick={() => setAvailableTimeSlot(availableTime)}
                       variant="outline"
                       key={index}
                       className={`${

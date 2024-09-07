@@ -1,6 +1,6 @@
 import { BookingStatus } from "@/app/admin/bookings/types";
-import { create } from "zustand";
 import axios from "axios";
+import { create } from "zustand";
 
 const CAL_API_KEY = process.env.NEXT_PUBLIC_CAL_API_KEY;
 
@@ -14,6 +14,11 @@ interface BookingState {
   createBooking: (data: any) => Promise<void>;
   cancelBooking: (bookingId: number) => Promise<void>;
   acceptBooking: (bookingId: number) => Promise<void>;
+  rescheduleBooking: (
+    bookingId: number,
+    startTime: Date,
+    endTime: Date
+  ) => Promise<void>;
 }
 
 export const useBookingStore = create<BookingState>((set) => ({
@@ -108,10 +113,10 @@ export const useBookingStore = create<BookingState>((set) => ({
 
   rescheduleBooking: async (
     bookingId: number,
-    startTime: string,
-    endTime: string
+    startTime: Date,
+    endTime: Date
   ) => {
-    set({ updateStatusLoading: bookingId, loading: ture, error: null });
+    set({ updateStatusLoading: bookingId, loading: true, error: null });
     try {
       const response = await axios.patch(
         `https://api.cal.com/v1/bookings/${bookingId}?apiKey=${CAL_API_KEY}`,

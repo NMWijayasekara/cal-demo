@@ -1,15 +1,18 @@
-import { hash } from "bcryptjs";
-import { prisma } from "@/lib/prisma";
 import { generateTokens } from "@/lib/auth";
+import prisma from "@/lib/prisma";
+import { hash } from "bcryptjs";
 
 const ACCESS_TOKEN_EXPIRATION_TIME = 60 * 60 * 1000; // 1 hour in milliseconds
 
 export async function POST(request: Request) {
   try {
-    const { email, password } = await request.json();
+    const { email, password } = (await request.json()) as {
+      email: string;
+      password: string;
+    };
 
     // Hash password
-    const hashedPassword = await hash(password, 12);
+    const hashedPassword = (await hash(password, 12)) as string;
 
     // Create user in the database
     const user = await prisma.user.create({
