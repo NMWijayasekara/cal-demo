@@ -1,5 +1,6 @@
 import { Booking, BookingStatus } from "@/app/admin/bookings/types";
 import { Button } from "@/components/ui/button";
+import { format } from "date-fns";
 import {
   RiCalendar2Line,
   RiEdit2Line,
@@ -27,10 +28,7 @@ const ViewBooking = ({ booking, onClose }: ViewBookingProps) => {
         <div className="font-bold text-xl">{booking.title}</div>
         <div className="flex justify-between items-center">
           <BookingStatusBadge status={booking.status} />
-          <ResheduleBooking
-            bookingId={booking.id}
-            eventId={booking.eventTypeId}
-          >
+          <ResheduleBooking booking={booking} eventId={booking.eventTypeId}>
             <Button size={"sm"} className="font-black mb-1 flex gap-2">
               <RiEdit2Line /> Reshedule
             </Button>
@@ -40,15 +38,16 @@ const ViewBooking = ({ booking, onClose }: ViewBookingProps) => {
         <div className="flex items-center border-2 p-4 rounded-lg">
           <div className="flex-1 font-black text-lg flex gap-2 items-center">
             <RiCalendar2Line size={35} />{" "}
-            {new Date(booking.startTime).toDateString()}
+            {format(new Date(booking.startTime), "PPP")}
           </div>
           <div className="flex">
             <div className="flex gap-2">
-              <RiTimeLine /> {new Date(booking.startTime).toLocaleTimeString()}
+              <RiTimeLine />{" "}
+              {format(new Date(booking.startTime), "h:mm aa")}
             </div>
             -
             <div className="flex gap-2">
-              {new Date(booking.endTime).toLocaleTimeString()}
+              {format(new Date(booking.endTime), "h:mm aa")}
             </div>
           </div>
         </div>

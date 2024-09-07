@@ -18,6 +18,7 @@ import {
 import { Calendar } from "@/components/ui/calendar";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
+import { format } from "date-fns";
 import {
   Select,
   SelectContent,
@@ -33,6 +34,7 @@ import { useEventsStore } from "@/store/events";
 import generateAvailableTimes from "@/lib/generateTimeSlots";
 import { Textarea } from "@/components/ui/textarea";
 import { z } from "zod";
+import { Booking, BookingStatus } from "@/app/admin/bookings/types";
 
 const formSchema = z.object({
   date: z.date({
@@ -44,17 +46,17 @@ const formSchema = z.object({
 
 interface ResheduleBookingProps extends PropsWithChild {
   eventId: number;
-  bookingId: number;
+  booking: Booking;
 }
 
 const ResheduleBooking = ({
   children,
   eventId,
-  bookingId,
+  booking,
 }: ResheduleBookingProps) => {
   const { events, getEvents } = useEventsStore();
   const { rescheduleBooking, loading } = useBookingStore();
-  const [selectedTimeSlot, setSelectedTimeSlot] = useState<number | null>(null);
+  const [selectedTimeSlot, setSelectedTimeSlot] = useState<string | null>(null);
   const [open, setOpen] = useState(false); // Manage dialog open state
 
   const fetchEvents = useCallback(async () => {
@@ -68,11 +70,15 @@ const ResheduleBooking = ({
   const form = useForm({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      start: "",
-      date: "",
-      end: "",
+      date: new Date(booking.startTime),
+      start: format(new Date(booking.startTime), "HH:mm"),
+      end: format(new Date(booking.endTime), "HH:mm"),
     },
   });
+
+  useEffect(() => {
+    setSelectedTimeSlot(format(new Date(booking.startTime), "HH:mm"));
+  }, [booking]);
 
   const onSubmit = async (data: { date?: any; start?: any; end?: any }) => {
     const { date, start, end } = data;
@@ -93,7 +99,7 @@ const ResheduleBooking = ({
     console.log("End Date and Time:", endDateTime);
 
     try {
-      await rescheduleBooking(bookingId, startDateTime, endDateTime);
+      await rescheduleBooking(booking.id, startDateTime, endDateTime);
     } catch (error) {
       console.error(error);
       alert("Submit again");
@@ -108,14 +114,11 @@ const ResheduleBooking = ({
     return [];
   }, [events, eventId]);
 
-  const setAvailableTimeSlot = (
-    availableTime: {
-      start: string;
-      end: string;
-    },
-    index: number
-  ) => {
-    setSelectedTimeSlot(index);
+  const setAvailableTimeSlot = (availableTime: {
+    start: string;
+    end: string;
+  }) => {
+    setSelectedTimeSlot(availableTime.start);
     form.setValue("start", availableTime.start);
     form.setValue("end", availableTime.end);
 
@@ -139,7 +142,35 @@ const ResheduleBooking = ({
                   <FormItem>
                     <Calendar
                       mode="single"
-                      selected={field.value ? new Date(field.value) : undefined}
+                      selected={(() => {
+                        const today = new Date();
+                        today.setHours(0, 0, 0, 0);
+
+                        let startTime = new Date(field.value); // Assuming field.value contains the startTime
+                        startTime.setHours(0, 0, 0, 0);
+
+                        const isWeekday = (date) => {
+                          const day = date.getDay();
+                          return day >= 1 && day <= 5; // Monday to Friday
+                        };
+
+                        // Check if startTime is in the future or today, and on a weekday
+                        if (startTime >= today && isWeekday(startTime)) {
+                          return startTime;
+                        }
+
+                        // If startTime is in the past or not a weekday, adjust the selection to today or the next Monday
+                        if (isWeekday(today)) {
+                          return today;
+                        }
+
+                        // If today is Saturday or Sunday, move to the next Monday
+                        const nextMonday = new Date(today);
+                        nextMonday.setDate(
+                          today.getDate() + ((8 - today.getDay()) % 7)
+                        ); // Calculate the next Monday
+                        return nextMonday;
+                      })()}
                       onSelect={field.onChange}
                       disabled={(date) => {
                         const today = new Date();
@@ -168,7 +199,7 @@ const ResheduleBooking = ({
                       variant="outline"
                       key={index}
                       className={`${
-                        selectedTimeSlot === index
+                        selectedTimeSlot === availableTime.start
                           ? "bg-slate-900 text-white"
                           : ""
                       }`}

@@ -1,5 +1,4 @@
 "use client";
-import { getEvents } from "@/store/events";
 import { EventsStatus } from "@/app/admin/events/types";
 import { Button } from "@/components/ui/button";
 import {
@@ -30,22 +29,18 @@ import {
 } from "@tanstack/react-table";
 import { MoreHorizontal } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
+import { useEventsStore } from "@/store/events";
 
 const Events = () => {
-  const [events, setEvents] = useState<any[]>([]);
-  const [loading, setLoading] = useState(false);
+  const { events, getEvents, loading } = useEventsStore();
 
   const fetchEvents = useCallback(async () => {
-    setLoading(true);
     const fetchedEvents = await getEvents();
-    console.log(fetchedEvents);
-    setEvents(fetchedEvents);
-    setLoading(false);
-  }, []);
+  }, [getEvents]);
 
   useEffect(() => {
     fetchEvents();
-  }, []);
+  }, [fetchEvents]);
 
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
 

@@ -85,7 +85,7 @@ export const useBookingStore = create<BookingState>((set) => ({
 
   // Accept a booking
   acceptBooking: async (bookingId: number) => {
-    set({ loading: true, error: null });
+    set({ updateStatusLoading: bookingId, error: null });
     try {
       const response = await axios.patch(
         `https://api.cal.com/v1/bookings/${bookingId}?apiKey=${CAL_API_KEY}`,
@@ -99,10 +99,10 @@ export const useBookingStore = create<BookingState>((set) => ({
             ? { ...booking, status: BookingStatus.ACCEPTED }
             : booking
         ),
-        loading: false,
+        updateStatusLoading: null,
       }));
     } catch (error: any) {
-      set({ error: error?.message, loading: false });
+      set({ error: error?.message, updateStatusLoading: null });
     }
   },
 
@@ -111,7 +111,7 @@ export const useBookingStore = create<BookingState>((set) => ({
     startTime: string,
     endTime: string
   ) => {
-    set({ updateStatusLoading: bookingId, error: null });
+    set({ updateStatusLoading: bookingId, loading: ture, error: null });
     try {
       const response = await axios.patch(
         `https://api.cal.com/v1/bookings/${bookingId}?apiKey=${CAL_API_KEY}`,
